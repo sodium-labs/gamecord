@@ -87,7 +87,7 @@ export class FastType extends Game<FastTypeResult> {
     timeTaken = 0;
     wpm = 0;
 
-    constructor(context: GameContext, options: FastTypeOptions) {
+    constructor(context: GameContext, options?: FastTypeOptions) {
         super(context);
         this.options = fastTypeOptions.parse(options || {});
     }

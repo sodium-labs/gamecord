@@ -95,7 +95,7 @@ export class Flood extends Game<FloodResult> {
 
     message: Message | null = null;
 
-    constructor(context: GameContext, options: FloodOptions) {
+    constructor(context: GameContext, options?: FloodOptions) {
         super(context);
         this.options = floodOptions.parse(options || {});
 

@@ -112,7 +112,7 @@ export class Memory extends Game<MemoryResult> {
 
     message: Message | null = null;
 
-    constructor(context: GameContext, options: MemoryOptions) {
+    constructor(context: GameContext, options?: MemoryOptions) {
         super(context);
         this.options = memoryOptions.parse(options || {});
 

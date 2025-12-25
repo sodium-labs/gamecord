@@ -1,0 +1,6 @@
+{
+    "rules": {
+        "no-unsafe-declaration-merging": "allow"
+    },
+    "ignorePatterns": ["node_modules", "dist", "tests", "package-lock.json"]
+}

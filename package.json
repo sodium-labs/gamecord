@@ -1,0 +1,66 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "name": "@sodiumlabs/gamecord",
+    "version": "0.1.0",
+    "description": "Add customizable games to your Discord bot",
+    "keywords": [
+        "discord",
+        "game",
+        "gamecord",
+        "games",
+        "minigame",
+        "minigames",
+        "module",
+        "typescript"
+    ],
+    "homepage": "https://github.com/sodium-labs/gamecord#readme",
+    "bugs": {
+        "url": "https://github.com/sodium-labs/gamecord/issues"
+    },
+    "license": "MIT",
+    "author": "sodiumlabs",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sodium-labs/gamecord.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "types": "./dist/index.d.ts",
+    "exports": {
+        "require": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "import": {
+            "types": "./dist/index.d.mts",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "lint": "tsc --noEmit && oxlint && oxfmt --check",
+        "fmt": "oxfmt",
+        "test:bot": "dotenv -- tsx tests/client.mts"
+    },
+    "dependencies": {
+        "@napi-rs/canvas": "^0.1.86",
+        "zod": "^4.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.10.1",
+        "discord.js": "^14.25.1",
+        "dotenv-cli": "^11.0.0",
+        "oxfmt": "^0.20.0",
+        "oxlint": "^1.35.0",
+        "tsup": "^8.5.1",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    },
+    "peerDependencies": {
+        "discord.js": "^14.25.1"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}

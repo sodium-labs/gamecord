@@ -140,4 +140,6 @@ if (process.argv.includes("--deploy")) {
     });
 
     console.log("Commands deployed");
+} else {
+    console.log("Use --deploy to deploy the commands");
 }

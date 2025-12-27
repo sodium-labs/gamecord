@@ -1,10 +1,10 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
-import { Game, GameContext, GameResult } from "@/core/Game";
-import { embedBuilder, gameMessage, resultMessage } from "@/utils/schemas";
-import { getRandomInt } from "@/utils/random";
-import { colors } from "@/utils/constants";
-import { Embed1, Embed2 } from "@/utils/types";
+import { Game, GameContext, GameResult } from "../core/Game";
+import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { getRandomInt } from "../utils/random";
+import { colors } from "../utils/constants";
+import { Embed1, Embed2 } from "../utils/types";
 
 /**
  * The flood game result.

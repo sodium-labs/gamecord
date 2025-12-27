@@ -1,12 +1,12 @@
 import z from "zod/v4";
 import { createCanvas } from "@napi-rs/canvas";
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
-import { Game, GameContext, GameResult } from "@/core/Game";
-import { moveInDirection, getOppositeDirection, Position } from "@/utils/games";
-import { embedBuilder, gameMessage } from "@/utils/schemas";
-import { colors } from "@/utils/constants";
-import { getRandomInt } from "@/utils/random";
-import { Embed1, Embed2 } from "@/utils/types";
+import { Game, GameContext, GameResult } from "../core/Game";
+import { moveInDirection, getOppositeDirection } from "../utils/games";
+import { embedBuilder, gameMessage } from "../utils/schemas";
+import { colors } from "../utils/constants";
+import { getRandomInt } from "../utils/random";
+import { Embed1, Embed2, Position } from "../utils/types";
 
 /**
  * The 2048 game result.
@@ -89,7 +89,7 @@ export class Game2048 extends Game<Game2048Result> {
     readonly options: z.output<typeof game2048Options>;
 
     /**
-     * The numbers are stored as exponents (1 => 2, 2 => 4, etc.).
+     * The numbers are stored as exponents (1 = 2, 2 = 4, etc.).
      */
     readonly gameboard: number[] = [];
     readonly length = 4;

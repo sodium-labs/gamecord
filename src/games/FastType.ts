@@ -1,9 +1,9 @@
 import z from "zod/v4";
 import { Message } from "discord.js";
-import { embedBuilder, resultMessage } from "@/utils/schemas";
-import { Game, GameContext, GameResult } from "@/core/Game";
-import { colors } from "@/utils/constants";
-import { Embed1, Embed2 } from "@/utils/types";
+import { embedBuilder, resultMessage } from "../utils/schemas";
+import { Game, GameContext, GameResult } from "../core/Game";
+import { colors } from "../utils/constants";
+import { Embed1, Embed2 } from "../utils/types";
 
 /**
  * The fast type game result.

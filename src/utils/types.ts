@@ -9,3 +9,8 @@ export type Embed1<G> = GamecordAPIEmbed | ((game: G) => Awaitable<GamecordAPIEm
 export type Embed2<G, R> = GamecordAPIEmbed | ((game: G, result: R) => Awaitable<GamecordAPIEmbed>);
 
 export type GameMessage<G> = string | ((game: G) => string);
+
+export interface Position {
+    x: number;
+    y: number;
+}

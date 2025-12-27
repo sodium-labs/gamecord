@@ -1,7 +1,7 @@
-import z from "zod";
+import z from "zod/v4";
 import { ActionRowBuilder, APIEmbed, Awaitable, ButtonBuilder, ButtonStyle, Message, User } from "discord.js";
 import { Game, GameContext, GameResult } from "./Game";
-import { colors } from "@/utils/constants";
+import { colors } from "../utils/constants";
 
 export interface VersusPlayers {
     player: User;
@@ -43,7 +43,7 @@ export interface VersusOptions extends z.input<ReturnType<typeof versusOptions>>
     timeout?: number;
 }
 
-type VersusOptionsOutput = z.output<ReturnType<typeof versusOptions>>;
+export type VersusOptionsOutput = z.output<ReturnType<typeof versusOptions>>;
 
 export const versusOptions = (name: string) =>
     z.object({

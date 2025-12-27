@@ -1,10 +1,10 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags, User } from "discord.js";
-import { GameContext } from "@/core/Game";
-import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "@/core/VersusGame";
-import { embedBuilder, gameMessage, resultMessage, var2Message } from "@/utils/schemas";
-import { colors } from "@/utils/constants";
-import { Embed1, Embed2 } from "@/utils/types";
+import { GameContext } from "../core/Game";
+import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
+import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
+import { colors } from "../utils/constants";
+import { Embed1, Embed2 } from "../utils/types";
 
 /**
  * The RPS game result.
@@ -227,7 +227,10 @@ export class RockPaperScissors extends VersusGame<RockPaperScissorsResult> {
     }
 
     private hasPlayer1Won() {
-        const { rock: r, paper: p, scissors: s } = this.options.emojis;
+        const r = this.options.emojis.rock;
+        const p = this.options.emojis.paper;
+        const s = this.options.emojis.scissors;
+
         return (
             (this.playerChoice === s && this.opponentChoice === p) ||
             (this.playerChoice === r && this.opponentChoice === s) ||

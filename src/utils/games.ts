@@ -1,12 +1,8 @@
 import assert from "node:assert";
 import { ButtonBuilder } from "discord.js";
+import { Position } from "./types";
 
 const numberEmojis = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
-
-export interface Position {
-    x: number;
-    y: number;
-}
 
 export const getNumberEmoji = (number: number): string => {
     assert(number >= 0 && number <= 9);

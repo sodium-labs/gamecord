@@ -1,12 +1,12 @@
 import z from "zod/v4";
 import { createCanvas } from "@napi-rs/canvas";
 import { AttachmentBuilder, Message, MessageCollector } from "discord.js";
-import { Game, GameContext, GameResult } from "@/core/Game";
-import { embedBuilder, resultMessage } from "@/utils/schemas";
-import { colors } from "@/utils/constants";
-import { getRandomElement } from "@/utils/random";
-import words from "@/data/wordle.json";
-import { Embed1, Embed2 } from "@/utils/types";
+import { Game, GameContext, GameResult } from "../core/Game";
+import { embedBuilder, resultMessage } from "../utils/schemas";
+import { colors } from "../utils/constants";
+import { getRandomElement } from "../utils/random";
+import words from "../data/wordle.json";
+import { Embed1, Embed2 } from "../utils/types";
 
 /**
  * The Wordle game result.

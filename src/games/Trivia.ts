@@ -1,10 +1,10 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
-import { Game, GameContext, GameResult } from "@/core/Game";
-import { embedBuilder, gameMessage, resultMessage } from "@/utils/schemas";
-import { colors } from "@/utils/constants";
-import { getRandomElement, shuffleArray } from "@/utils/random";
-import { Awaitable, Embed1, Embed2, GameMessage } from "@/utils/types";
+import { Game, GameContext, GameResult } from "../core/Game";
+import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { colors } from "../utils/constants";
+import { getRandomElement, shuffleArray } from "../utils/random";
+import { Awaitable, Embed1, Embed2, GameMessage } from "../utils/types";
 
 /**
  * The trivia game result.
@@ -308,7 +308,7 @@ export class Trivia extends Game<TriviaResult> {
             );
             const json = await res.json();
 
-            if (json.response_code === 5) {
+            if (typeof json === "object" && json !== null && "response_code" in json && json.response_code === 5) {
                 throw new Error("Ratelimited by opentdb");
             }
 

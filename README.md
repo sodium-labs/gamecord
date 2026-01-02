@@ -10,27 +10,57 @@
     </p>
 </div>
 
-# About
+## About
 
 ### Gamecord is a collection of games for your Discord bot.
 
-This library was made as a replacement for [discord-gamecord](https://www.npmjs.com/package/discord-gamecord) which is unmaintained (and partially broken) and has no TypeScript support. While the games options are mostly similar, they are more different as they offers more features to customize and handle your games. Also, this module does not contains all games of the original.
+This library was made as a replacement for [discord-gamecord](https://www.npmjs.com/package/discord-gamecord) which is unmaintained (and partially broken) and has no TypeScript support. While the game options are mostly similar, this library offers more features to customize and handle your games. Also, this module does not contain all games from the original.
 
-Each games are documented with examples on the documentation: TODO
+The module supports both slash commands and message commands!
 
-# Installation
+## Installation
 
-### Node.js 18 or newer is required.
+Node.js 18 or newer is required.
 
-```
+```sh
 npm install @sodiumlabs/gamecord
 ```
 
-# Example usage
+## Documentation
 
-TODO
+You can find the docs here: [https://docs.sodiumlabs.xyz/docs/packages/gamecord/stable](https://docs.sodiumlabs.xyz/docs/packages/gamecord/stable)
 
-# Some previews
+If you need help, ask on our [support server](https://discord.gg/8PDXWSHH7k).
+
+## Example usage
+
+```js
+const { Game2048 } = require("@sodiumlabs/gamecord");
+
+const game = new Game2048(interaction, {
+    embed: {
+        title: "2048",
+        color: 0x5865f2,
+    },
+    notPlayerMessage: game => `Only ${game.player} can use this menu.`,
+    timeout: 60_000,
+    emojis: {
+        up: "🔼",
+        down: "🔽",
+        right: "▶️",
+        left: "◀️"
+    }
+});
+
+game.on("error", err => console.error("Error!", err));
+game.on("gameOver", result => console.log("Result:", result));
+
+await game.start();
+```
+
+## Some previews
+
+Note: every embeds can be fully customized.
 
 <img src="./.github/images/2048.png" alt="2048 game" width="300">
 <img src="./.github/images/connect4.png" alt="connect4 game" width="300">
@@ -42,17 +72,21 @@ TODO
 <img src="./.github/images/trivia.png" alt="trivia game" width="300">
 <img src="./.github/images/wordle.png" alt="wordle game" width="300">
 
-# Notes
+## Notes
 
-- The module expects you to pass function that will not error. If it does, the games can break (e.g. by never emitting the `end` or `gameOver` event).
-- If you dont use `.on("error")`, errors will emit `uncaughtException` on your process.
-- Every components custom ids starts with `$gamecord-`.
-- Most games dont need any permissions since it relies on the interaction methods. However if the game is too long (>= 15mins), the interaction became invalid and the bot will need to be able to see the channel and edit its messages.
+- The module expects you to pass function that will not error. If they do, the games can break (e.g. by never emitting the `end` or `gameOver` event).
+- If you don't use `.on("error")`, errors will emit an `uncaughtException` in your process.
+- Every component custom ID starts with `$gamecord-`.
+- Most games don't need any permissions since they rely on interaction methods. However, if a game is too long (>= 15 mins), the interaction becomes invalid and the bot will need permission to view the channel and edit its messages.
 
-# Links
+## Links
 
-TODO
+- [Documentation](https://docs.sodiumlabs.xyz/docs/packages/gdapi/stable)
+- [Discord server](https://discord.gg/8PDXWSHH7k)
+- [GitHub](https://github.com/sodium-labs/gamecord)
+- [npm](https://npmjs.com/package/@sodiumlabs/gamecord)
+- [Sodium Labs](https://sodiumlabs.xyz)
 
-# Help
+## Help
 
 You need help with the module? Ask on our [support server!](https://discord.gg/8PDXWSHH7k)

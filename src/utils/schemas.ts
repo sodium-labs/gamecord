@@ -1,5 +1,6 @@
 import z from "zod/v4";
 import { Awaitable } from "./types";
+import { ButtonInteraction } from "discord.js";
 
 /**
  * A discord.js {@link discord.js#APIEmbed | APIEmbed} schema. The `color` property can be an hex string.
@@ -47,6 +48,9 @@ export const functionable =
 export const embedBuilder = <Args extends unknown[]>() => functionable(apiEmbed())<Args>();
 
 export const gameMessage = <T>() => z.union([z.string().transform(val => () => val), z.custom<(game: T) => string>()]);
+
+export const gameInteractionMessage = <T, I = ButtonInteraction>() =>
+    z.union([z.string().transform(val => () => val), z.custom<(game: T, i: I) => string>()]);
 
 export const resultMessage = <R, T>() =>
     z.union([z.string().transform(val => () => val), z.custom<(result: R, game: T) => string>()]);

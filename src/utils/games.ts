@@ -4,6 +4,10 @@ import { Position } from "./types";
 
 const numberEmojis = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 
+export const isID = (value: string): boolean => {
+    return ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(value[0]);
+};
+
 export const getNumberEmoji = (number: number): string => {
     assert(number >= 0 && number <= 9);
     return numberEmojis[number];

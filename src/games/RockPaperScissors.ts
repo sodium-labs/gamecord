@@ -2,9 +2,9 @@ import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags, User } from "discord.js";
 import { GameContext } from "../core/Game";
 import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
-import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, resultMessage, var2Message } from "../utils/schemas";
 import { colors } from "../utils/constants";
-import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage, GameTurnMessage } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameInteractionMessage, GameTurnMessage } from "../utils/types";
 
 /**
  * The RPS game result.
@@ -54,7 +54,7 @@ export interface RockPaperScissorsOptions {
      * The first argument is the emoji chosen by the player.
      */
     choiceMessage?: GameTurnMessage<RockPaperScissors, string>;
-    notPlayerMessage?: GameMessage<RockPaperScissors>;
+    notPlayerMessage?: GameInteractionMessage<RockPaperScissors>;
     buttonStyle?: ButtonStyle;
     buttons?: {
         rock?: string;
@@ -88,7 +88,7 @@ export const rockPaperScissorsOptions = z.object({
     choiceMessage: var2Message<string, RockPaperScissors>()
         .optional()
         .default(() => defaultOptions.choiceMessage),
-    notPlayerMessage: gameMessage<RockPaperScissors>()
+    notPlayerMessage: gameInteractionMessage<RockPaperScissors>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     buttonStyle: z.number().int().optional().default(ButtonStyle.Primary),
@@ -180,12 +180,13 @@ export class RockPaperScissors extends VersusGame<RockPaperScissorsResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id && i.user.id !== this.opponent.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {

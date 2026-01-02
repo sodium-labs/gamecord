@@ -1,10 +1,10 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
 import { Game, GameContext, GameResult } from "../core/Game";
-import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, resultMessage } from "../utils/schemas";
 import { getRandomInt } from "../utils/random";
 import { colors } from "../utils/constants";
-import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameInteractionMessage } from "../utils/types";
 
 /**
  * The flood game result.
@@ -39,7 +39,7 @@ export interface FloodOptions {
     endEmbed?: GameEndEmbed<Flood, FloodResult>;
     winMessage?: GameEndMessage<Flood, FloodResult>;
     loseMessage?: GameEndMessage<Flood, FloodResult>;
-    notPlayerMessage?: GameMessage<Flood>;
+    notPlayerMessage?: GameInteractionMessage<Flood>;
     /**
      * The size (width) of the game board.
      */
@@ -68,7 +68,7 @@ export const floodOptions = z.object({
     loseMessage: resultMessage<FloodResult, Flood>()
         .optional()
         .default(() => defaultOptions.loseMessage),
-    notPlayerMessage: gameMessage<Flood>()
+    notPlayerMessage: gameInteractionMessage<Flood>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     size: z.number().int().optional().default(defaultOptions.size),
@@ -131,12 +131,13 @@ export class Flood extends Game<FloodResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {

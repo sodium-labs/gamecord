@@ -2,9 +2,10 @@ import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags, User } from "discord.js";
 import { GameContext } from "../core/Game";
 import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
-import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, resultMessage, var2Message } from "../utils/schemas";
 import { colors } from "../utils/constants";
-import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage, GameTurnMessage } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameInteractionMessage, GameTurnMessage } from "../utils/types";
+import { isID } from "../utils/games";
 
 /**
  * The Tic Tac Toe game result.
@@ -31,10 +32,12 @@ const defaultOptions = {
         title: "Tic Tac Toe",
         color: colors.blurple,
     },
-    winMessage: (res: TicTacToeResult) => `${res.winnerEmoji} | **${res.winner}** won the TicTacToe Game.`,
+    winMessage: (res: TicTacToeResult) =>
+        `${isID(res.winnerEmoji || "") ? `<:_:${res.winnerEmoji}>` : res.winnerEmoji} | **${res.winner}** won the TicTacToe Game.`,
     tieMessage: () => "The Game tied! No one won the Game!",
     timeoutMessage: () => "The Game went unfinished! No one won the Game!",
-    turnMessage: (turn: TicTacToeTurn) => `${turn.emoji} | It's player **${turn.player.displayName}**'s turn.`,
+    turnMessage: (turn: TicTacToeTurn) =>
+        `${isID(turn.emoji || "") ? `<:_:${turn.emoji}>` : turn.emoji} | It's player **${turn.player.displayName}**'s turn.`,
     notPlayerMessage: (game: TicTacToe) => `Only ${game.player} and ${game.opponent} can use this menu.`,
     emojis: {
         xButton: "❌",
@@ -55,9 +58,15 @@ export interface TicTacToeOptions {
     tieMessage?: GameEndMessage<TicTacToe, TicTacToeResult>;
     timeoutMessage?: GameEndMessage<TicTacToe, TicTacToeResult>;
     turnMessage?: GameTurnMessage<TicTacToe, TicTacToeTurn>;
-    notPlayerMessage?: GameMessage<TicTacToe>;
+    notPlayerMessage?: GameInteractionMessage<TicTacToe>;
     emojis?: {
+        /**
+         * You can also use an emoji ID.
+         */
         xButton?: string;
+        /**
+         * You can also use an emoji ID.
+         */
         oButton?: string;
     };
     styles?: {
@@ -86,7 +95,7 @@ export const ticTacToeOptions = z.object({
     turnMessage: var2Message<TicTacToeTurn, TicTacToe>()
         .optional()
         .default(() => defaultOptions.turnMessage),
-    notPlayerMessage: gameMessage<TicTacToe>()
+    notPlayerMessage: gameInteractionMessage<TicTacToe>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     emojis: z
@@ -186,12 +195,13 @@ export class TicTacToe extends VersusGame<TicTacToeResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id && i.user.id !== this.opponent.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {
@@ -349,7 +359,7 @@ export class TicTacToe extends VersusGame<TicTacToeResult> {
                 const btn = new ButtonBuilder().setStyle(data.style).setCustomId(`$gamecord-tictactoe-${index}`);
 
                 if (data.emoji) {
-                    btn.setEmoji(data.emoji);
+                    btn.setEmoji(isID(data.emoji) ? { id: data.emoji } : data.emoji);
                 } else {
                     btn.setLabel("\u200b");
                 }

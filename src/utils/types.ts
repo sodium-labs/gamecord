@@ -1,4 +1,4 @@
-import { APIEmbed as DiscordAPIEmbed } from "discord.js";
+import { ButtonInteraction, APIEmbed as DiscordAPIEmbed } from "discord.js";
 
 export type Awaitable<T> = T | Promise<T>;
 
@@ -18,6 +18,11 @@ export type GameEndEmbed<G, R> = APIEmbed | ((game: G, result: R) => Awaitable<A
  * A string, or a function to create one using the game.
  */
 export type GameMessage<G> = string | ((game: G) => string);
+
+/**
+ * A string, or a function to create one using the game.
+ */
+export type GameInteractionMessage<G, I = ButtonInteraction> = string | ((game: G, i: I) => string);
 
 /**
  * A string, or a function to create one using the turn data.

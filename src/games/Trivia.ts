@@ -1,10 +1,17 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
 import { Game, GameContext, GameResult } from "../core/Game";
-import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, gameMessage, resultMessage } from "../utils/schemas";
 import { colors } from "../utils/constants";
 import { getRandomElement, shuffleArray } from "../utils/random";
-import { Awaitable, GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
+import {
+    Awaitable,
+    GameEmbed,
+    GameEndEmbed,
+    GameEndMessage,
+    GameInteractionMessage,
+    GameMessage,
+} from "../utils/types";
 
 /**
  * The trivia game result.
@@ -19,7 +26,24 @@ export interface TriviaResult extends GameResult {
 }
 
 /**
- * For `single` questions, the values must be the strings `"True"` and `"False"`.
+ * The data of the trivia. The `options` array contains all the choices, including the answer.
+ *
+ *
+ * If you are using the `trivia` option, here is what you should know:
+ *
+ * ### When `mode` is `boolean`:
+ *
+ * - `answer` MUST be exactly either `"True"` or `"False"`.
+ *
+ * - `options` MUST be exactly `["True", "False"]`.
+ *
+ * The buttons labels will still use the `trueText` and `falseText` options.
+ *
+ * ### When `mode` is `multiple`:
+ *
+ * - `answer` MUST be exactly the same as one present in the `options`.
+ *
+ * - `options` can have 2 to 5 elements.
  */
 export interface TriviaData {
     question: string;
@@ -69,14 +93,18 @@ export interface TriviaOptions {
     endEmbed?: GameEndEmbed<Trivia, TriviaResult>;
     winMessage?: GameEndMessage<Trivia, TriviaResult>;
     loseMessage?: GameEndMessage<Trivia, TriviaResult>;
+    notPlayerMessage?: GameInteractionMessage<Trivia>;
     /**
      * Message displayed when the API call to fetch the trivia fails.
      */
     errorMessage?: GameMessage<Trivia>;
     /**
      * "multiple" by default.
+     *
+     * When `mode` is `"boolean"`, the trivia is a true/false question.
+     * When `mode` is `"multiple"`, it is a multi-choices trivia.
      */
-    mode?: "multiple" | "single";
+    mode?: "multiple" | "boolean";
     /**
      * Random if not specified.
      */
@@ -91,11 +119,11 @@ export interface TriviaOptions {
      */
     timeout?: number;
     /**
-     * The button label for the "True" button. Only when mode: "single".
+     * The button label for the "True" button. Only used when mode is "boolean".
      */
     trueText?: string;
     /**
-     * The button label for the "False" button. Only when mode: "single".
+     * The button label for the "False" button. Only used when mode is "boolean".
      */
     falseText?: string;
 }
@@ -112,10 +140,10 @@ export const triviaOptions = z.object({
     errorMessage: gameMessage<Trivia>()
         .optional()
         .default(() => defaultOptions.errorMessage),
-    notPlayerMessage: gameMessage<Trivia>()
+    notPlayerMessage: gameInteractionMessage<Trivia>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
-    mode: z.enum(["multiple", "single"]).optional().default(defaultOptions.mode),
+    mode: z.enum(["multiple", "boolean"]).optional().default(defaultOptions.mode),
     difficulty: z.enum(difficulties).optional(),
     trivia: z.custom<(game: Trivia) => Awaitable<TriviaData>>().optional(),
     timeout: z.number().int().optional().default(defaultOptions.timeout),
@@ -125,6 +153,9 @@ export const triviaOptions = z.object({
 
 /**
  * A game where the player needs to find the answer of a random question.
+ *
+ * When `mode` is `"boolean"`, the trivia is a true/false question.
+ * When `mode` is `"multiple"`, it is a multi-choices trivia.
  *
  * ## API
  *
@@ -185,12 +216,13 @@ export class Trivia extends Game<TriviaResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {
@@ -317,7 +349,7 @@ export class Trivia extends Game<TriviaResult> {
             return await this.options.trivia(this);
         }
 
-        const mode = this.options.mode.replace("single", "boolean");
+        const mode = this.options.mode;
 
         let data;
         try {

@@ -1,10 +1,10 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
 import { Game, GameContext, GameResult } from "../core/Game";
-import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, resultMessage } from "../utils/schemas";
 import { getNumberEmoji } from "../utils/games";
 import { colors } from "../utils/constants";
-import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameInteractionMessage } from "../utils/types";
 
 /**
  * The minesweeper game result.
@@ -36,7 +36,7 @@ export interface MinesweeperOptions {
     endEmbed?: GameEndEmbed<Minesweeper, MinesweeperResult>;
     winMessage?: GameEndMessage<Minesweeper, MinesweeperResult>;
     loseMessage?: GameEndMessage<Minesweeper, MinesweeperResult>;
-    notPlayerMessage?: GameMessage<Minesweeper>;
+    notPlayerMessage?: GameInteractionMessage<Minesweeper>;
     /**
      * The max amount of time the player can be idle.
      */
@@ -57,7 +57,7 @@ export const minesweeperOptions = z.object({
     loseMessage: resultMessage<MinesweeperResult, Minesweeper>()
         .optional()
         .default(() => defaultOptions.loseMessage),
-    notPlayerMessage: gameMessage<Minesweeper>()
+    notPlayerMessage: gameInteractionMessage<Minesweeper>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     timeout: z.number().int().optional().default(defaultOptions.timeout),
@@ -134,12 +134,13 @@ export class Minesweeper extends Game<MinesweeperResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {

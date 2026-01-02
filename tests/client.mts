@@ -84,7 +84,7 @@ client.on(Events.InteractionCreate, async interaction => {
             break;
         }
         case "trivia": {
-            game = new Trivia(interaction, { mode: "single" });
+            game = new Trivia(interaction, { mode: "boolean" });
             game.on("gameOver", res => console.log(`[${interaction.commandName} gameOver] res:`, res));
             break;
         }

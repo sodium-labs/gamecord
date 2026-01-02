@@ -3,10 +3,10 @@ import { createCanvas } from "@napi-rs/canvas";
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
 import { Game, GameContext, GameResult } from "../core/Game";
 import { moveInDirection, getOppositeDirection } from "../utils/games";
-import { embedBuilder, gameMessage } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage } from "../utils/schemas";
 import { colors } from "../utils/constants";
 import { getRandomInt } from "../utils/random";
-import { GameEmbed, GameEndEmbed, GameMessage, Position } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameInteractionMessage, Position } from "../utils/types";
 
 /**
  * The 2048 game result.
@@ -39,7 +39,7 @@ const defaultOptions = {
 export interface Game2048Options {
     embed?: GameEmbed<Game2048>;
     endEmbed?: GameEndEmbed<Game2048, Game2048Result>;
-    notPlayerMessage?: GameMessage<Game2048>;
+    notPlayerMessage?: GameInteractionMessage<Game2048>;
     /**
      * The max amount of time the player can be idle.
      */
@@ -56,7 +56,7 @@ export interface Game2048Options {
 export const game2048Options = z.object({
     embed: embedBuilder<[Game2048]>().optional().default(defaultOptions.embed),
     endEmbed: embedBuilder<[Game2048, Game2048Result]>().optional(),
-    notPlayerMessage: gameMessage<Game2048>()
+    notPlayerMessage: gameInteractionMessage<Game2048>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     timeout: z.number().int().optional().default(defaultOptions.timeout),
@@ -156,12 +156,13 @@ export class Game2048 extends Game<Game2048Result> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {

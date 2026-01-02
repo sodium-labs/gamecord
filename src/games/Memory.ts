@@ -1,11 +1,11 @@
 import z from "zod/v4";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, MessageFlags } from "discord.js";
-import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
+import { embedBuilder, gameInteractionMessage, resultMessage } from "../utils/schemas";
 import { Game, GameContext, GameResult } from "../core/Game";
 import { shuffleArray } from "../utils/random";
 import { removeEmoji } from "../utils/games";
 import { colors } from "../utils/constants";
-import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameInteractionMessage } from "../utils/types";
 
 export const jokerEmoji = "🃏";
 
@@ -63,7 +63,7 @@ export interface MemoryOptions {
     endEmbed?: GameEndEmbed<Memory, MemoryResult>;
     winMessage?: GameEndMessage<Memory, MemoryResult>;
     loseMessage?: GameEndMessage<Memory, MemoryResult>;
-    notPlayerMessage?: GameMessage<Memory>;
+    notPlayerMessage?: GameInteractionMessage<Memory>;
     /**
      * The max amount of time the player can be idle.
      */
@@ -83,7 +83,7 @@ export const memoryOptions = z.object({
     loseMessage: resultMessage<MemoryResult, Memory>()
         .optional()
         .default(() => defaultOptions.loseMessage),
-    notPlayerMessage: gameMessage<Memory>()
+    notPlayerMessage: gameInteractionMessage<Memory>()
         .optional()
         .default(() => defaultOptions.notPlayerMessage),
     timeout: z.number().int().optional().default(defaultOptions.timeout),
@@ -204,12 +204,13 @@ export class Memory extends Game<MemoryResult> {
 
         collector.on("collect", async i => {
             if (!i.customId.startsWith("$gamecord")) return;
+            if (!i.isButton()) return;
 
             if (i.user.id !== this.player.id) {
                 if (this.options.notPlayerMessage) {
                     try {
                         await i.reply({
-                            content: this.options.notPlayerMessage(this),
+                            content: this.options.notPlayerMessage(this, i),
                             flags: MessageFlags.Ephemeral,
                         });
                     } catch (err) {

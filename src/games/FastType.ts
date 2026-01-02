@@ -4,12 +4,15 @@ import { embedBuilder, resultMessage } from "../utils/schemas";
 import { Game, GameContext, GameResult } from "../core/Game";
 import { colors } from "../utils/constants";
 import { GameEmbed, GameEndEmbed, GameEndMessage } from "../utils/types";
+import { getRandomElement } from "../utils/random";
+import sentences from "../data/fast-type.json";
 
 /**
  * The fast type game result.
  */
 export interface FastTypeResult extends GameResult {
     outcome: "win" | "lose" | "timeout";
+    sentence: string;
     timeTaken: number;
     secondsTaken: number;
     /**
@@ -27,7 +30,6 @@ const defaultOptions = {
     winMessage: (res: FastTypeResult) =>
         `You won! You finished the type race in ${res.secondsTaken} seconds with word per minute of ${res.wpm}.`,
     loseMessage: () => "You lost! You didn't type the correct sentence in time.",
-    sentence: "Some really cool sentence to fast type.",
     timeout: 30_000,
 };
 
@@ -37,7 +39,7 @@ export interface FastTypeOptions {
     winMessage?: GameEndMessage<FastType, FastTypeResult>;
     loseMessage?: GameEndMessage<FastType, FastTypeResult>;
     /**
-     * The sentence the player has to type.
+     * The sentence the player has to type. Random by default.
      */
     sentence?: string;
     /**
@@ -57,7 +59,7 @@ export const fastTypeOptions = z.object({
     loseMessage: resultMessage<FastTypeResult, FastType>()
         .optional()
         .default(() => defaultOptions.loseMessage),
-    sentence: z.string().optional().default(defaultOptions.sentence),
+    sentence: z.string().optional(),
     timeout: z.number().int().optional().default(defaultOptions.timeout),
 });
 
@@ -86,6 +88,11 @@ export const fastTypeOptions = z.object({
 export class FastType extends Game<FastTypeResult> {
     readonly options: z.output<typeof fastTypeOptions>;
 
+    /**
+     * The sentence the player has to type.
+     */
+    sentence: string;
+
     private timeTaken: number = 0;
 
     private wpm: number = 0;
@@ -93,6 +100,7 @@ export class FastType extends Game<FastTypeResult> {
     constructor(context: GameContext, options?: FastTypeOptions) {
         super(context);
         this.options = fastTypeOptions.parse(options || {});
+        this.sentence = this.options.sentence || getRandomElement(sentences);
     }
 
     override async start() {
@@ -107,7 +115,7 @@ export class FastType extends Game<FastTypeResult> {
                       fields: [
                           {
                               name: "Sentence",
-                              value: this.options.sentence
+                              value: this.sentence
                                   .split(" ")
                                   .map(e => "`" + e.split("").join(" ") + "`")
                                   .join(" "),
@@ -130,7 +138,7 @@ export class FastType extends Game<FastTypeResult> {
             this.timeTaken = Math.floor(Date.now() - startTime);
             this.wpm = Math.floor(msg.content.trim().length / ((this.timeTaken / 60000) % 60) / 5);
 
-            const hasWon = msg.content?.toLowerCase().trim() === this.options.sentence.toLowerCase();
+            const hasWon = msg.content?.toLowerCase().trim() === this.sentence.toLowerCase();
             collector.stop(hasWon ? "$win" : "$lose");
         });
 
@@ -150,6 +158,7 @@ export class FastType extends Game<FastTypeResult> {
     private async gameOver(message: Message, outcome: "win" | "lose" | "timeout") {
         const result = this.buildResult({
             outcome,
+            sentence: this.sentence,
             timeTaken: this.timeTaken,
             secondsTaken: Math.floor(this.timeTaken / 1000),
             wpm: this.wpm,

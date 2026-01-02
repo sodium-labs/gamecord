@@ -5,12 +5,12 @@
     "description": "Add customizable games to your Discord bot",
     "keywords": [
         "discord",
+        "discord.js",
         "game",
         "gamecord",
         "games",
         "minigame",
         "minigames",
-        "module",
         "typescript"
     ],
     "homepage": "https://github.com/sodium-labs/gamecord#readme",

@@ -6,7 +6,7 @@ import { embedBuilder, resultMessage } from "../utils/schemas";
 import { colors } from "../utils/constants";
 import { getRandomElement } from "../utils/random";
 import words from "../data/wordle.json";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage } from "../utils/types";
 
 /**
  * The Wordle game result.
@@ -14,7 +14,7 @@ import { Embed1, Embed2 } from "../utils/types";
 export interface WordleResult extends GameResult {
     outcome: "win" | "lose" | "timeout";
     /**
-     * The word to guess, in lowercase. Either the one specified or a random one.
+     * {@inheritDoc Wordle.word}
      */
     word: string;
     guesses: string[];
@@ -31,15 +31,17 @@ const defaultOptions = {
     timeout: 120_000,
 };
 
-export interface WordleOptions extends z.input<typeof wordleOptions> {
-    embed?: Embed1<Wordle>;
-    endEmbed?: Embed2<Wordle, WordleResult>;
+export interface WordleOptions {
+    embed?: GameEmbed<Wordle>;
+    endEmbed?: GameEndEmbed<Wordle, WordleResult>;
+    winMessage?: GameEndMessage<Wordle, WordleResult>;
+    loseMessage?: GameEndMessage<Wordle, WordleResult>;
     /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
     /**
-     * The word to guess, in lowercase. Either the one specified or a random one.
+     * {@inheritDoc Wordle.word}
      */
     word?: string;
 }
@@ -60,17 +62,16 @@ export const wordleOptions = z.object({
 /**
  * A game where the player needs to guess the word.
  *
- * # Permissions
+ * ## Permissions
  *
  * The bot needs to be able to read the messages of the current channel.
  *
- * # Custom Display
+ * ## Custom Display
  *
  * If you are using functions to create the embeds, use `attachment://board.png`
  * in the embed image URL to display the board.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Wordle(interaction, {
  *     timeout: 120_000
@@ -103,6 +104,9 @@ export class Wordle extends Game<WordleResult> {
         this.word = (this.options.word || getRandomElement(words)).toLowerCase();
     }
 
+    /**
+     * {@inheritDoc (Game:class).start}
+     */
     override async start() {
         const embed = await this.buildEmbed(this.options.embed, {
             image: { url: "attachment://board.png" },
@@ -149,7 +153,7 @@ export class Wordle extends Game<WordleResult> {
     }
 
     private async gameOver(message: Message, isTimeout: boolean) {
-        const result = this.result({
+        const result = this.buildResult({
             outcome: isTimeout ? "timeout" : this.guesses.includes(this.word) ? "win" : "lose",
             word: this.word,
             guesses: this.guesses,

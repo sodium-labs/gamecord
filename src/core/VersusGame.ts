@@ -1,7 +1,8 @@
 import z from "zod/v4";
-import { ActionRowBuilder, APIEmbed, Awaitable, ButtonBuilder, ButtonStyle, Message, User } from "discord.js";
+import { ActionRowBuilder, APIEmbed, ButtonBuilder, ButtonStyle, Message, User } from "discord.js";
 import { Game, GameContext, GameResult } from "./Game";
 import { colors } from "../utils/constants";
+import { Awaitable, DeepRequired } from "../utils/types";
 
 export interface VersusPlayers {
     player: User;
@@ -32,7 +33,7 @@ const defaultOptions = {
     },
 };
 
-export interface VersusOptions extends z.input<ReturnType<typeof versusOptions>> {
+export interface VersusOptions {
     /**
      * The opponent.
      */
@@ -41,9 +42,16 @@ export interface VersusOptions extends z.input<ReturnType<typeof versusOptions>>
      * The amount of time the opponent has to accept or deny the versus request.
      */
     timeout?: number;
+    requestEmbed?: (players: VersusPlayers) => APIEmbed;
+    rejectEmbed?: (players: VersusPlayers) => APIEmbed;
+    timeoutEmbed?: (players: VersusPlayers) => APIEmbed;
+    buttons?: {
+        accept?: string;
+        reject?: string;
+    };
 }
 
-export type VersusOptionsOutput = z.output<ReturnType<typeof versusOptions>>;
+export type VersusOptionsOutput = DeepRequired<VersusOptions>;
 
 export const versusOptions = (name: string) =>
     z.object({
@@ -52,15 +60,15 @@ export const versusOptions = (name: string) =>
         }),
         timeout: z.number().int().optional().default(defaultOptions.timeout),
         requestEmbed: z
-            .custom<(ctx: VersusPlayers) => APIEmbed>()
+            .custom<(players: VersusPlayers) => APIEmbed>()
             .optional()
             .default(() => defaultOptions.requestEmbed(name)),
         rejectEmbed: z
-            .custom<(ctx: VersusPlayers) => APIEmbed>()
+            .custom<(players: VersusPlayers) => APIEmbed>()
             .optional()
             .default(() => defaultOptions.rejectEmbed(name)),
         timeoutEmbed: z
-            .custom<(ctx: VersusPlayers) => APIEmbed>()
+            .custom<(players: VersusPlayers) => APIEmbed>()
             .optional()
             .default(() => defaultOptions.timeoutEmbed),
         buttons: z
@@ -72,10 +80,16 @@ export const versusOptions = (name: string) =>
             .default(defaultOptions.buttons),
     });
 
+/**
+ * The base result data of a versus game.
+ */
 export interface VersusGameResult extends GameResult {
     opponent: User;
 }
 
+/**
+ * The base class of a versus game.
+ */
 export abstract class VersusGame<Res extends VersusGameResult, Ctx extends GameContext = GameContext> extends Game<
     Res,
     Ctx

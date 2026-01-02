@@ -6,7 +6,7 @@ import { moveInDirection, getOppositeDirection } from "../utils/games";
 import { embedBuilder, gameMessage } from "../utils/schemas";
 import { colors } from "../utils/constants";
 import { getRandomInt } from "../utils/random";
-import { Embed1, Embed2, Position } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameMessage, Position } from "../utils/types";
 
 /**
  * The 2048 game result.
@@ -36,13 +36,21 @@ const defaultOptions = {
     },
 };
 
-export interface Game2048Options extends z.input<typeof game2048Options> {
-    embed?: Embed1<Game2048>;
-    endEmbed?: Embed2<Game2048, Game2048Result>;
+export interface Game2048Options {
+    embed?: GameEmbed<Game2048>;
+    endEmbed?: GameEndEmbed<Game2048, Game2048Result>;
+    notPlayerMessage?: GameMessage<Game2048>;
     /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
+    buttonStyle?: ButtonStyle;
+    emojis?: {
+        up?: string;
+        down?: string;
+        right?: string;
+        left?: string;
+    };
 }
 
 export const game2048Options = z.object({
@@ -67,13 +75,12 @@ export const game2048Options = z.object({
 /**
  * A game where the player needs to merge numbers until reaching 2048.
  *
- * # Custom Display
+ * ## Custom Display
  *
  * If you are using functions to create the embeds, use `attachment://board.png`
  * in the embed image URL to display the board.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Game2048(interaction, {
  *     timeout: 120_000
@@ -89,11 +96,21 @@ export class Game2048 extends Game<Game2048Result> {
     readonly options: z.output<typeof game2048Options>;
 
     /**
+     * A 4x4 array representing the game.
+     *
      * The numbers are stored as exponents (1 = 2, 2 = 4, etc.).
      */
     readonly gameboard: number[] = [];
-    readonly length = 4;
-    score = 0;
+
+    /**
+     * The width of the board.
+     */
+    readonly length: number = 4;
+
+    /**
+     * The current score of the player.
+     */
+    score: number = 0;
 
     message: Message | null = null;
 
@@ -200,7 +217,7 @@ export class Game2048 extends Game<Game2048Result> {
     }
 
     private async gameOver(message: Message, outcome: "over" | "timeout") {
-        const result = this.result({ outcome, score: this.score, hasWon: !!this.gameboard.find(n => n >= 11) });
+        const result = this.buildResult({ outcome, score: this.score, hasWon: !!this.gameboard.find(n => n >= 11) });
         this.emit("gameOver", result);
 
         const embed = await this.buildEndEmbed(this.options.embed, this.options.endEmbed, result, {

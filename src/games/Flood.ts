@@ -4,7 +4,7 @@ import { Game, GameContext, GameResult } from "../core/Game";
 import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
 import { getRandomInt } from "../utils/random";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
 
 /**
  * The flood game result.
@@ -34,17 +34,29 @@ const defaultOptions = {
     emojis: ["🟥", "🟦", "🟧", "🟪", "🟩"],
 };
 
-export interface FloodOptions extends z.input<typeof floodOptions> {
-    embed?: Embed1<Flood>;
-    endEmbed?: Embed2<Flood, FloodResult>;
+export interface FloodOptions {
+    embed?: GameEmbed<Flood>;
+    endEmbed?: GameEndEmbed<Flood, FloodResult>;
+    winMessage?: GameEndMessage<Flood, FloodResult>;
+    loseMessage?: GameEndMessage<Flood, FloodResult>;
+    notPlayerMessage?: GameMessage<Flood>;
     /**
      * The size (width) of the game board.
      */
     size?: number;
     /**
+     * The max amount of turns the player can do.
+     */
+    maxTurns?: number;
+    /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
+    buttonStyle?: ButtonStyle;
+    /**
+     * The 5 emojis of the game.
+     */
+    emojis?: string[];
 }
 
 export const floodOptions = z.object({
@@ -69,12 +81,11 @@ export const floodOptions = z.object({
 /**
  * A game where the player needs to make the whole board a single emoji.
  *
- * # Custom display
+ * ## Custom display
  *
  * If you are using functions to create the embeds, use {@link Flood#getBoardContent} to get the game board.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Flood(interaction, {
  *     winMessage: "You won the Game! You successfully avoided all the mines."
@@ -91,7 +102,11 @@ export class Flood extends Game<FloodResult> {
     readonly options: z.output<typeof floodOptions>;
 
     readonly board: number[] = [];
-    turns = 0;
+
+    /**
+     * The current amount of turns.
+     */
+    turns: number = 0;
 
     message: Message | null = null;
 
@@ -160,6 +175,9 @@ export class Flood extends Game<FloodResult> {
         });
     }
 
+    /**
+     * Get the formatted board content.
+     */
     getBoardContent() {
         let board = "";
         for (let y = 0; y < this.options.size; y++) {
@@ -201,7 +219,7 @@ export class Flood extends Game<FloodResult> {
     }
 
     private async gameOver(message: Message, outcome: "win" | "lose" | "timeout") {
-        const result = this.result({
+        const result = this.buildResult({
             outcome,
             turns: this.turns,
             maxTurns: this.options.maxTurns,

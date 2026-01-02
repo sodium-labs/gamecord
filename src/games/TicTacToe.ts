@@ -4,7 +4,7 @@ import { GameContext } from "../core/Game";
 import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
 import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage, GameTurnMessage } from "../utils/types";
 
 /**
  * The Tic Tac Toe game result.
@@ -47,10 +47,23 @@ const defaultOptions = {
     timeout: 60_000,
 };
 
-export interface TicTacToeOptions extends z.input<typeof ticTacToeOptions> {
+export interface TicTacToeOptions {
     versus: VersusOptions;
-    embed?: Embed1<TicTacToe>;
-    endEmbed?: Embed2<TicTacToe, TicTacToeResult>;
+    embed?: GameEmbed<TicTacToe>;
+    endEmbed?: GameEndEmbed<TicTacToe, TicTacToeResult>;
+    winMessage?: GameEndMessage<TicTacToe, TicTacToeResult>;
+    tieMessage?: GameEndMessage<TicTacToe, TicTacToeResult>;
+    timeoutMessage?: GameEndMessage<TicTacToe, TicTacToeResult>;
+    turnMessage?: GameTurnMessage<TicTacToe, TicTacToeTurn>;
+    notPlayerMessage?: GameMessage<TicTacToe>;
+    emojis?: {
+        xButton?: string;
+        oButton?: string;
+    };
+    styles?: {
+        xButton?: ButtonStyle;
+        oButton?: ButtonStyle;
+    };
     /**
      * The max amount of time the player can be idle.
      */
@@ -96,12 +109,11 @@ export const ticTacToeOptions = z.object({
 /**
  * The Tic Tac Toe game.
  *
- * # Errors
+ * ## Errors
  *
  * Can emit `fatalError` if it fails to edit from the invitation embed to the game message.
  *
- * # Example
- *
+ * @example
  * ```js
  * const opponent = // The opponent (must be a discord.js User)
  *
@@ -125,11 +137,14 @@ export class TicTacToe extends VersusGame<TicTacToeResult> {
      * A 9-elements array.
      *
      * - `0` : empty
+     *
      * - `1` : X (player 1)
+     *
      * - `2` : O (player 2)
      */
     readonly gameboard: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    isPlayer1Turn = true;
+
+    isPlayer1Turn: boolean = true;
 
     message: Message | null = null;
 
@@ -239,7 +254,7 @@ export class TicTacToe extends VersusGame<TicTacToeResult> {
         const winner = this.hasWonGame(1) ? this.player : this.opponent;
         const winnerEmoji = this.hasWonGame(1) ? this.options.emojis.xButton : this.options.emojis.oButton;
 
-        const result = this.result({
+        const result = this.buildResult({
             opponent: this.opponent,
             outcome,
             winner: outcome === "win" ? winner : null,
@@ -310,7 +325,7 @@ export class TicTacToe extends VersusGame<TicTacToeResult> {
         return false;
     }
 
-    private getPlayerTurnData() {
+    private getPlayerTurnData(): TicTacToeTurn {
         return this.isPlayer1Turn
             ? { player: this.player, emoji: this.options.emojis.xButton }
             : { player: this.opponent, emoji: this.options.emojis.oButton };

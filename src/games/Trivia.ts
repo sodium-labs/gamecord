@@ -4,7 +4,7 @@ import { Game, GameContext, GameResult } from "../core/Game";
 import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
 import { colors } from "../utils/constants";
 import { getRandomElement, shuffleArray } from "../utils/random";
-import { Awaitable, Embed1, Embed2, GameMessage } from "../utils/types";
+import { Awaitable, GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
 
 /**
  * The trivia game result.
@@ -64,21 +64,40 @@ const defaultOptions = {
     falseText: "False",
 };
 
-export interface TriviaOptions extends z.input<typeof triviaOptions> {
-    embed?: Embed1<Trivia>;
-    endEmbed?: Embed2<Trivia, TriviaResult>;
+export interface TriviaOptions {
+    embed?: GameEmbed<Trivia>;
+    endEmbed?: GameEndEmbed<Trivia, TriviaResult>;
+    winMessage?: GameEndMessage<Trivia, TriviaResult>;
+    loseMessage?: GameEndMessage<Trivia, TriviaResult>;
     /**
      * Message displayed when the API call to fetch the trivia fails.
      */
     errorMessage?: GameMessage<Trivia>;
     /**
+     * "multiple" by default.
+     */
+    mode?: "multiple" | "single";
+    /**
      * Random if not specified.
      */
     difficulty?: "easy" | "medium" | "hard";
     /**
+     * Use this options if you want to provide your own questions.
+     * If present, this will be used instead of the API.
+     */
+    trivia?: (game: Trivia) => Awaitable<TriviaData>;
+    /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
+    /**
+     * The button label for the "True" button. Only when mode: "single".
+     */
+    trueText?: string;
+    /**
+     * The button label for the "False" button. Only when mode: "single".
+     */
+    falseText?: string;
 }
 
 export const triviaOptions = z.object({
@@ -107,13 +126,12 @@ export const triviaOptions = z.object({
 /**
  * A game where the player needs to find the answer of a random question.
  *
- * # API
+ * ## API
  *
  * This game uses the `opentdb.com` API. If you want to use
  * your own questions, use the `trivia` option.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Trivia(interaction, {
  *     timeout: 30_000
@@ -205,7 +223,7 @@ export class Trivia extends Game<TriviaResult> {
 
     private async gameOver(message: Message, hasWon: boolean, hasTimedOut = false) {
         const trivia = this.trivia!;
-        const result = this.result({
+        const result = this.buildResult({
             outcome: hasTimedOut ? "timeout" : hasWon ? "win" : "lose",
             trivia: trivia,
             selected: this.selected!,

@@ -4,7 +4,7 @@ import { GameContext } from "../core/Game";
 import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
 import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage, GameTurnMessage } from "../utils/types";
 
 /**
  * The RPS game result.
@@ -43,10 +43,29 @@ const defaultOptions = {
     timeout: 60_000,
 };
 
-export interface RockPaperScissorsOptions extends z.input<typeof rockPaperScissorsOptions> {
+export interface RockPaperScissorsOptions {
     versus: VersusOptions;
-    embed?: Embed1<RockPaperScissors>;
-    endEmbed?: Embed2<RockPaperScissors, RockPaperScissorsResult>;
+    embed?: GameEmbed<RockPaperScissors>;
+    endEmbed?: GameEndEmbed<RockPaperScissors, RockPaperScissorsResult>;
+    winMessage?: GameEndMessage<RockPaperScissors, RockPaperScissorsResult>;
+    tieMessage?: GameEndMessage<RockPaperScissors, RockPaperScissorsResult>;
+    timeoutMessage?: GameEndMessage<RockPaperScissors, RockPaperScissorsResult>;
+    /**
+     * The first argument is the emoji chosen by the player.
+     */
+    choiceMessage?: GameTurnMessage<RockPaperScissors, string>;
+    notPlayerMessage?: GameMessage<RockPaperScissors>;
+    buttonStyle?: ButtonStyle;
+    buttons?: {
+        rock?: string;
+        paper?: string;
+        scissors?: string;
+    };
+    emojis?: {
+        rock?: string;
+        paper?: string;
+        scissors?: string;
+    };
     /**
      * The max amount of time the player can be idle.
      */
@@ -95,12 +114,11 @@ export const rockPaperScissorsOptions = z.object({
 /**
  * The Rock Paper Scissors game.
  *
- * # Errors
+ * ## Errors
  *
  * Can emit `fatalError` if it fails to edit from the invitation embed to the game message.
  *
- * # Example
- *
+ * @example
  * ```js
  * const opponent = // The opponent (must be a discord.js User)
  *
@@ -263,7 +281,7 @@ export class RockPaperScissors extends VersusGame<RockPaperScissorsResult> {
 
     private async gameOver(message: Message) {
         const outcome = this.getResult();
-        const result = this.result({
+        const result = this.buildResult({
             opponent: this.opponent,
             outcome,
             winner: outcome === "win" ? (this.hasPlayer1Won() ? this.player : this.opponent) : null,

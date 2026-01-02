@@ -1,7 +1,6 @@
 import { EventEmitter } from "node:events";
 import {
     APIEmbed,
-    Awaitable,
     InteractionEditReplyOptions,
     InteractionReplyOptions,
     Message,
@@ -11,9 +10,16 @@ import {
     SendableChannels,
     User,
 } from "discord.js";
+import { Awaitable } from "../utils/types";
 
+/**
+ * The context in which the game started (from an interaction or from a message).
+ */
 export type GameContext = RepliableInteraction | Message;
 
+/**
+ * The base result data of a game.
+ */
 export interface GameResult {
     /**
      * The player who started the game.
@@ -36,18 +42,18 @@ export declare interface Game<Res, Ctx extends GameContext = GameContext> {
      */
     on(event: "error", listener: (err: unknown) => Awaitable<void>): this;
     /**
-     * Emitted when a fatal error occurred. The "end" event will be emitted at the same time.
+     * Emitted when a fatal error occurred. The `end` event will be emitted at the same time.
      * For example, this let you tell the players that the game stopped.
      *
      * This can only happens in some games, see their docs to know more.
      */
     on(event: "fatalError", listener: (err: unknown) => Awaitable<void>): this;
     /**
-     * Only emitted on instances of {@link VersusGame}.
-     *
      * Emitted if the versus is rejected, either manually by the opponent or because
      * he took too long to respond. In that case, the `gameOver` event
      * is not emitted.
+     *
+     * Only emitted on instances of {@link VersusGame}.
      */
     on(event: "versusReject", listener: (reason: "user" | "time") => Awaitable<void>): this;
     /**
@@ -57,7 +63,7 @@ export declare interface Game<Res, Ctx extends GameContext = GameContext> {
     /**
      * Emitted when the game ends. Not necessarily emitted last (e.g. can be emitted just before `gameOver`).
      *
-     * This event is guaranteed to be emitted after {@link Game#start} was successfully called, even after errors (fatal or not).
+     * This event is guaranteed to be emitted after the start() method was successfully called, even after errors (fatal or not).
      */
     on(event: "end", listener: () => Awaitable<void>): this;
 }
@@ -72,7 +78,7 @@ export abstract class Game<Res extends GameResult, Ctx extends GameContext = Gam
      */
     readonly context: Ctx;
     /**
-     * If the {@link Game#context} is a `Message` or not.
+     * If the `context` is a `Message` or not.
      */
     readonly isMessage: boolean;
     /**
@@ -81,7 +87,7 @@ export abstract class Game<Res extends GameResult, Ctx extends GameContext = Gam
     readonly player: User;
 
     /**
-     * The timestamp at which the class was instantiated. Not when {@link Game#start} was called.
+     * The timestamp at which the class was instantiated. Not when start() was called.
      */
     readonly gameStartedAt: number;
 
@@ -200,7 +206,7 @@ export abstract class Game<Res extends GameResult, Ctx extends GameContext = Gam
     /**
      * Utility to build the result of a game.
      */
-    protected result(data: Omit<Res, keyof GameResult>): Res {
+    protected buildResult(data: Omit<Res, keyof GameResult>): Res {
         return {
             player: this.player,
             gameStartedAt: this.gameStartedAt,

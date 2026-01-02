@@ -4,7 +4,7 @@ import { GameContext } from "../core/Game";
 import { VersusGame, VersusGameResult, VersusOptions, versusOptions } from "../core/VersusGame";
 import { embedBuilder, gameMessage, resultMessage, var2Message } from "../utils/schemas";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage, GameTurnMessage } from "../utils/types";
 
 /**
  * The Connect 4 game result.
@@ -46,10 +46,22 @@ const defaultOptions = {
     timeout: 60_000,
 };
 
-export interface Connect4Options extends z.input<typeof connect4Options> {
+export interface Connect4Options {
     versus: VersusOptions;
-    embed?: Embed1<Connect4>;
-    endEmbed?: Embed2<Connect4, Connect4Result>;
+    embed?: GameEmbed<Connect4>;
+    endEmbed?: GameEndEmbed<Connect4, Connect4Result>;
+    winMessage?: GameEndMessage<Connect4, Connect4Result>;
+    tieMessage?: GameEndMessage<Connect4, Connect4Result>;
+    timeoutMessage?: GameEndMessage<Connect4, Connect4Result>;
+    turnMessage?: GameTurnMessage<Connect4, Connect4Turn>;
+    notPlayerMessage?: GameMessage<Connect4>;
+    statusText?: string;
+    emojis?: {
+        board?: string;
+        player1?: string;
+        player2?: string;
+    };
+    buttonStyle?: ButtonStyle;
     /**
      * The max amount of time the player can be idle.
      */
@@ -91,12 +103,11 @@ export const connect4Options = z.object({
 /**
  * The Connect 4 game.
  *
- * # Errors
+ * ## Errors
  *
  * Can emit `fatalError` if it fails to edit from the invitation embed to the game message.
  *
- * # Example
- *
+ * @example
  * ```js
  * const opponent = // The opponent (must be a discord.js User)
  *
@@ -120,11 +131,14 @@ export class Connect4 extends VersusGame<Connect4Result> {
      * A 6*7 elements array.
      *
      * - `0` : empty
+     *
      * - `1` : player 1
+     *
      * - `2` : player 2
      */
     readonly gameboard: number[] = [];
-    isPlayer1Turn = true;
+
+    isPlayer1Turn: boolean = true;
 
     message: Message | null = null;
 
@@ -260,7 +274,7 @@ export class Connect4 extends VersusGame<Connect4Result> {
         const winner = this.isPlayer1Turn ? this.player : this.opponent;
         const winnerEmoji = this.isPlayer1Turn ? this.options.emojis.player1 : this.options.emojis.player2;
 
-        const result = this.result({
+        const result = this.buildResult({
             opponent: this.opponent,
             outcome,
             winner: outcome === "win" ? winner : null,
@@ -310,6 +324,9 @@ export class Connect4 extends VersusGame<Connect4Result> {
             : { player: this.opponent, emoji: this.options.emojis.player2 };
     }
 
+    /**
+     * Get the formatted board content.
+     */
     getBoardContent() {
         let board = "";
         for (let y = 0; y < 6; y++) {

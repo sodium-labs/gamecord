@@ -1,10 +1,8 @@
 import z from "zod/v4";
-// oxlint-disable-next-line no-unused-vars
-import { APIEmbed } from "discord.js";
 import { Awaitable } from "./types";
 
 /**
- * A discord.js {@link APIEmbed} schema. The `color` property can be an hex string.
+ * A discord.js {@link discord.js#APIEmbed | APIEmbed} schema. The `color` property can be an hex string.
  */
 export const apiEmbed = () =>
     z
@@ -38,8 +36,7 @@ export const apiEmbed = () =>
 /**
  * Make a value also valid as a function return value.
  *
- * e.g.
- *
+ * @example
  * `functionable(z.string())<[A, B]>()` = `z.string() | ((args_0: A, args_1: B) => z.string())`
  */
 export const functionable =

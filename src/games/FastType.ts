@@ -3,7 +3,7 @@ import { Message } from "discord.js";
 import { embedBuilder, resultMessage } from "../utils/schemas";
 import { Game, GameContext, GameResult } from "../core/Game";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage } from "../utils/types";
 
 /**
  * The fast type game result.
@@ -31,9 +31,11 @@ const defaultOptions = {
     timeout: 30_000,
 };
 
-export interface FastTypeOptions extends z.input<typeof fastTypeOptions> {
-    embed?: Embed1<FastType>;
-    endEmbed?: Embed2<FastType, FastTypeResult>;
+export interface FastTypeOptions {
+    embed?: GameEmbed<FastType>;
+    endEmbed?: GameEndEmbed<FastType, FastTypeResult>;
+    winMessage?: GameEndMessage<FastType, FastTypeResult>;
+    loseMessage?: GameEndMessage<FastType, FastTypeResult>;
     /**
      * The sentence the player has to type.
      */
@@ -62,11 +64,11 @@ export const fastTypeOptions = z.object({
 /**
  * A game where the player needs to write a sentence as fast as possible.
  *
- * # Permissions
+ * ## Permissions
  *
  * The bot needs to be able to read the messages of the current channel.
  *
- * # Example
+ * @example
  * ```js
  * const game = new FastType(interaction, {
  *     // See the full list of options in the docs
@@ -84,8 +86,9 @@ export const fastTypeOptions = z.object({
 export class FastType extends Game<FastTypeResult> {
     readonly options: z.output<typeof fastTypeOptions>;
 
-    timeTaken = 0;
-    wpm = 0;
+    private timeTaken: number = 0;
+
+    private wpm: number = 0;
 
     constructor(context: GameContext, options?: FastTypeOptions) {
         super(context);
@@ -145,7 +148,7 @@ export class FastType extends Game<FastTypeResult> {
     }
 
     private async gameOver(message: Message, outcome: "win" | "lose" | "timeout") {
-        const result = this.result({
+        const result = this.buildResult({
             outcome,
             timeTaken: this.timeTaken,
             secondsTaken: Math.floor(this.timeTaken / 1000),

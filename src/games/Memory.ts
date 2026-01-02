@@ -5,7 +5,7 @@ import { Game, GameContext, GameResult } from "../core/Game";
 import { shuffleArray } from "../utils/random";
 import { removeEmoji } from "../utils/games";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
 
 export const jokerEmoji = "🃏";
 
@@ -58,13 +58,20 @@ const defaultOptions = {
     ],
 };
 
-export interface MemoryOptions extends z.input<typeof memoryOptions> {
-    embed?: Embed1<Memory>;
-    endEmbed?: Embed2<Memory, MemoryResult>;
+export interface MemoryOptions {
+    embed?: GameEmbed<Memory>;
+    endEmbed?: GameEndEmbed<Memory, MemoryResult>;
+    winMessage?: GameEndMessage<Memory, MemoryResult>;
+    loseMessage?: GameEndMessage<Memory, MemoryResult>;
+    notPlayerMessage?: GameMessage<Memory>;
     /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
+    /**
+     * 20 emojis used for the game.
+     */
+    emojis?: string[];
 }
 
 export const memoryOptions = z.object({
@@ -86,8 +93,7 @@ export const memoryOptions = z.object({
 /**
  * A game where the player to find all the pairs.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Memory(interaction, {
  *     winMessage: res => `**You won the Game! You turned a total of \`${res.tilesTurned}\` tiles.**`
@@ -106,9 +112,9 @@ export class Memory extends Game<MemoryResult> {
     readonly emojis: string[];
     components: ActionRowBuilder<ButtonBuilder>[] = [];
     selected: MemoryEmojiPosition | null = null;
-    remainingPairs = 12;
-    tilesTurned = 0;
-    readonly size = 5;
+    remainingPairs: number = 12;
+    tilesTurned: number = 0;
+    readonly size: number = 5;
 
     message: Message | null = null;
 
@@ -165,7 +171,7 @@ export class Memory extends Game<MemoryResult> {
     }
 
     private async gameOver(message: Message, hasTimedOut: boolean) {
-        const result = this.result({
+        const result = this.buildResult({
             outcome: hasTimedOut ? "timeout" : "win",
             tilesTurned: this.tilesTurned,
             remainingPairs: this.remainingPairs,

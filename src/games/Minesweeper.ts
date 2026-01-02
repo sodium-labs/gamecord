@@ -4,7 +4,7 @@ import { Game, GameContext, GameResult } from "../core/Game";
 import { embedBuilder, gameMessage, resultMessage } from "../utils/schemas";
 import { getNumberEmoji } from "../utils/games";
 import { colors } from "../utils/constants";
-import { Embed1, Embed2 } from "../utils/types";
+import { GameEmbed, GameEndEmbed, GameEndMessage, GameMessage } from "../utils/types";
 
 /**
  * The minesweeper game result.
@@ -31,13 +31,21 @@ const defaultOptions = {
     },
 };
 
-export interface MinesweeperOptions extends z.input<typeof minesweeperOptions> {
-    embed?: Embed1<Minesweeper>;
-    endEmbed?: Embed2<Minesweeper, MinesweeperResult>;
+export interface MinesweeperOptions {
+    embed?: GameEmbed<Minesweeper>;
+    endEmbed?: GameEndEmbed<Minesweeper, MinesweeperResult>;
+    winMessage?: GameEndMessage<Minesweeper, MinesweeperResult>;
+    loseMessage?: GameEndMessage<Minesweeper, MinesweeperResult>;
+    notPlayerMessage?: GameMessage<Minesweeper>;
     /**
      * The max amount of time the player can be idle.
      */
     timeout?: number;
+    mines?: number;
+    emojis?: {
+        flag?: string;
+        mine?: string;
+    };
 }
 
 export const minesweeperOptions = z.object({
@@ -66,8 +74,7 @@ export const minesweeperOptions = z.object({
 /**
  * A game where the player needs to click on all tiles except the mines.
  *
- * # Example
- *
+ * @example
  * ```js
  * const game = new Minesweeper(interaction, {
  *     winMessage: "You won the Game! You successfully avoided all the mines."
@@ -84,17 +91,20 @@ export class Minesweeper extends Game<MinesweeperResult> {
     readonly options: z.output<typeof minesweeperOptions>;
 
     /**
-     * The board of the game.
+     * The board of the game (5x5 array).
      *
      * - `true` : empty
+     *
      * - `false` : mine
+     *
      * - `number` : empty, with `n` mines around it
      */
     readonly board: (number | boolean)[] = [];
+
     /**
      * The width/height of the board
      */
-    readonly size = 5;
+    readonly size: number = 5;
 
     message: Message | null = null;
 
@@ -173,7 +183,7 @@ export class Minesweeper extends Game<MinesweeperResult> {
     }
 
     private async gameOver(message: Message, hasTimedOut: boolean) {
-        const result = this.result({
+        const result = this.buildResult({
             outcome: hasTimedOut ? "timeout" : this.hasFoundAllMines() ? "win" : "lose",
             tilesTurned: this.board.filter(Number.isInteger).length,
         });

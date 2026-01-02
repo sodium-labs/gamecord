@@ -2,5 +2,5 @@
     "rules": {
         "no-unsafe-declaration-merging": "allow"
     },
-    "ignorePatterns": ["node_modules", "dist", "tests", "package-lock.json"]
+    "ignorePatterns": ["node_modules", "dist", "dist-docs", "tests", "package-lock.json"]
 }
